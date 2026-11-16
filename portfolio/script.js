@@ -1,10 +1,39 @@
 (function(){
+  /* Endereço da Edge Function (troque SEU_PROJECT_REF pelo ID do seu projeto no Supabase) */
+  var ENDPOINT='https://qrwfxthwkrshhambttav.supabase.co/functions/v1/send-contact';
   var $=function(s,c){return (c||document).querySelector(s)};
   var $$=function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
   var root=document.documentElement;
 
   /* Loader */
   window.addEventListener('load',function(){setTimeout(function(){$('#loader').classList.add('fim')},1200)});
+
+  /* Animação de digitação (título e descrição do início) */
+  var alvos=$$('.hero h2, .hero-texto > p:not(.conectar)');
+  var reduz=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function digita(el,texto,vel,fim){
+    var i=0,sp=el.querySelector('.digita');
+    (function passo(){
+      sp.textContent=texto.slice(0,++i);
+      if(i<texto.length){setTimeout(passo,vel+Math.random()*40)}else if(fim){fim()}
+    })();
+  }
+  if(alvos.length&&!reduz){
+    var dados=alvos.map(function(el){
+      var t=el.textContent.trim();
+      el.style.minHeight=el.offsetHeight+'px';           /* evita o layout "pular" */
+      el.setAttribute('aria-label',t);                    /* leitor de tela lê o texto completo */
+      el.innerHTML='<span class="digita" aria-hidden="true"></span>';
+      return {el:el,t:t};
+    });
+    setTimeout(function(){
+      (function proximo(n){
+        if(n>=dados.length)return;
+        dados.forEach(function(d,k){d.el.classList.toggle('cursor',k===n)});
+        digita(dados[n].el,dados[n].t,n===0?55:22,function(){setTimeout(function(){proximo(n+1)},250)});
+      })(0);
+    },1500);                                              /* começa depois do loader */
+  }
 
   /* Tema claro/escuro */
   try{var t=localStorage.getItem('tema');if(t)root.setAttribute('data-theme',t)}catch(e){}
@@ -24,7 +53,7 @@
   }else{$$('.rev').forEach(function(el){el.classList.add('vis')})}
 
   /* Filtro de projetos */
-  var botoes=$$('.btn-filtro'),cards=$$('.card'),contador=$('#contador-projetos'),vazio=$('#mensagem-vazio');
+  var botoes=$$('.btn-filtro'),cards=$$('.projeto'),contador=$('#contador-projetos'),vazio=$('#mensagem-vazio');
   botoes.forEach(function(b){b.addEventListener('click',function(){
     var t=b.dataset.tech,n=0;
     botoes.forEach(function(x){var on=x===b;x.classList.toggle('ativo',on);x.setAttribute('aria-pressed',on)});
@@ -70,10 +99,23 @@
       resumo.classList.remove('oculto');resumo.focus();return;
     }
     resumo.classList.add('oculto');btn.disabled=true;btn.textContent='Enviando...';
-    setTimeout(function(){
-      btn.disabled=false;btn.textContent='Enviar mensagem';
-      status.textContent='Mensagem enviada com sucesso!';status.className='status-formulario ok';
-      f.reset();grupoAssunto.classList.add('oculto');cont.textContent='0 / 1000 caracteres (mínimo 30)';
-    },900);
+    var dados={nome:$('#nome').value.trim(),email:$('#email').value.trim(),motivo:motivo.value,
+      assunto:assunto.value.trim(),mensagem:msg.value.trim(),website:$('#website').value};
+    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)})
+      .then(function(r){return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,body:j}})})
+      .then(function(r){
+        if(r.status===200&&r.body.ok){
+          status.textContent='Mensagem enviada com sucesso!';status.className='status-formulario ok';
+          f.reset();grupoAssunto.classList.add('oculto');cont.textContent='0 / 1000 caracteres (mínimo 30)';
+        }else if(r.status===422&&r.body.errors){
+          var out=[];Object.keys(r.body.errors).forEach(function(id){if($('#erro-'+id))erro(id,r.body.errors[id],out)});
+          lista.innerHTML='';out.forEach(function(o){var li=document.createElement('li');li.textContent=o.t;lista.appendChild(li)});
+          resumo.classList.remove('oculto');resumo.focus();
+        }else{
+          status.textContent=r.body.error||'Não foi possível enviar agora. Tente novamente.';status.className='status-formulario falha';
+        }
+      })
+      .catch(function(){status.textContent='Falha de conexão. Tente novamente.';status.className='status-formulario falha'})
+      .then(function(){btn.disabled=false;btn.textContent='Enviar mensagem'});
   });
 })();

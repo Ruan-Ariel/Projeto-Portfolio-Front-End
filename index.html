@@ -86,33 +86,39 @@
       </div>
       <p id="contador-projetos" class="dica" aria-live="polite">Exibindo 3 projetos.</p>
     </div>
-    <div id="cards-projetos" class="cards">
-      <article class="card" data-tech="html-css js">
-        <div class="thumb"><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-portfolio.jpg" alt="Prévia do site do Portfólio Pessoal" /></div>
-        <div class="card-corpo"><h3>Portfólio Pessoal</h3>
-        <p><strong>Problema abordado:</strong> Apresentação de trajetória acadêmica e criação de canal centralizado de contato.</p>
-        <p><strong>Público:</strong> Recrutadores e avaliadores acadêmicos.</p>
-        <p><strong>Minha contribuição:</strong> Arquitetura HTML5 semântica, validação JS do formulário e filtro interativo.</p>
-        <p class="techs"><span>HTML</span><span>CSS</span><span>JavaScript</span></p>
-        <a href="https://github.com/Ruan-Ariel" class="link" target="_blank" rel="noopener">Visualizar projeto ↗</a></div>
+    <div id="cards-projetos" class="projetos">
+            <article class="projeto" data-tech="html-css js">
+        <div class="projeto-texto">
+          <p class="categoria">Site pessoal / HTML semântico</p>
+          <h3>Portfólio Pessoal</h3>
+          <p><strong>Problema abordado:</strong> Apresentação de trajetória acadêmica e criação de canal centralizado de contato.</p><p><strong>Público:</strong> Recrutadores e avaliadores acadêmicos.</p>
+          <p class="destaque"><strong>Minha contribuição:</strong> Arquitetura HTML5 semântica, validação JS do formulário e filtro interativo.</p>
+          <ul class="stack"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
+          <a href="https://github.com/Ruan-Ariel" class="btn escuro" target="_blank" rel="noopener">Ver projeto ↗</a>
+        </div>
+        <figure class="janela"><div class="janela-barra"><span></span><span></span><span></span><em>github.com/Ruan-Ariel</em></div><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-portfolio.jpg" alt="Prévia do site do Portfólio Pessoal" /></figure>
       </article>
-      <article class="card" data-tech="html-css">
-        <div class="thumb"><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-academia.jpg" alt="Layout e wireframe do Site de Academia" /></div>
-        <div class="card-corpo"><h3>Site de Academia</h3>
-        <p><strong>Problema abordado:</strong> Divulgação de planos de treino e facilitação do agendamento de alunos.</p>
-        <p><strong>Público:</strong> Frequentadores de academia e personal trainers.</p>
-        <p><strong>Minha contribuição:</strong> Prototipagem completa no Figma e desenvolvimento da marcação responsiva.</p>
-        <p class="techs"><span>Figma</span><span>HTML</span><span>CSS</span></p>
-        <a href="https://github.com/Ruan-Ariel" class="link" target="_blank" rel="noopener">Visualizar projeto ↗</a></div>
+      <article class="projeto" data-tech="html-css">
+        <div class="projeto-texto">
+          <p class="categoria">Site responsivo / prototipagem</p>
+          <h3>Site de Academia</h3>
+          <p><strong>Problema abordado:</strong> Divulgação de planos de treino e facilitação do agendamento de alunos.</p><p><strong>Público:</strong> Frequentadores de academia e personal trainers.</p>
+          <p class="destaque"><strong>Minha contribuição:</strong> Prototipagem completa no Figma e desenvolvimento da marcação responsiva.</p>
+          <ul class="stack"><li>Figma</li><li>HTML</li><li>CSS</li></ul>
+          <a href="https://github.com/Ruan-Ariel" class="btn escuro" target="_blank" rel="noopener">Ver projeto ↗</a>
+        </div>
+        <figure class="janela"><div class="janela-barra"><span></span><span></span><span></span><em>github.com/Ruan-Ariel</em></div><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-academia.jpg" alt="Layout e wireframe do Site de Academia" /></figure>
       </article>
-      <article class="card" data-tech="html-css js">
-        <div class="thumb"><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-soledrop.jpg" alt="Prévia da loja virtual SoleDrop" /></div>
-        <div class="card-corpo"><h3>SoleDrop</h3>
-        <p><strong>Problema abordado:</strong> Venda online de tênis com busca por modelo, categoria ou oferta.</p>
-        <p><strong>Público:</strong> Consumidores que buscam tênis masculinos e femininos.</p>
-        <p><strong>Minha contribuição:</strong> Desenvolvimento da interface da loja virtual.</p>
-        <p class="techs"><span>HTML</span><span>CSS</span><span>JavaScript</span></p>
-        <a href="https://github.com/Ruan-Ariel" class="link" target="_blank" rel="noopener">Visualizar projeto ↗</a></div>
+      <article class="projeto" data-tech="html-css js">
+        <div class="projeto-texto">
+          <p class="categoria">Loja virtual / interface</p>
+          <h3>SoleDrop</h3>
+          <p><strong>Problema abordado:</strong> Venda online de tênis com busca por modelo, categoria ou oferta.</p><p><strong>Público:</strong> Consumidores que buscam tênis masculinos e femininos.</p>
+          <p class="destaque"><strong>Minha contribuição:</strong> Desenvolvimento da interface da loja virtual.</p>
+          <ul class="stack"><li>HTML</li><li>CSS</li><li>JavaScript</li></ul>
+          <a href="https://github.com/Ruan-Ariel" class="btn escuro" target="_blank" rel="noopener">Ver projeto ↗</a>
+        </div>
+        <figure class="janela"><div class="janela-barra"><span></span><span></span><span></span><em>github.com/Ruan-Ariel</em></div><img loading="lazy" width="1000" height="500" src="portfolio/images/capa-soledrop.jpg" alt="Prévia da loja virtual SoleDrop" /></figure>
       </article>
     </div>
     <div id="mensagem-vazio" class="mensagem-vazio oculto" role="status"><p>Nenhum projeto encontrado para o filtro selecionado.</p></div>
@@ -126,6 +132,7 @@
         <div id="resumo-erros" class="resumo-erros oculto" tabindex="-1" role="alert" aria-labelledby="titulo-erros"><h3 id="titulo-erros">Por favor, corrija os erros abaixo:</h3><ul id="lista-erros"></ul></div>
         <div id="status-formulario" class="status-formulario" aria-live="polite"></div>
         <form id="form-contato" novalidate>
+          <div class="hp" aria-hidden="true"><label for="website">Não preencha este campo</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off" /></div>
           <div class="campo-grupo"><label for="nome">Nome completo <span>*</span></label><input type="text" id="nome" name="nome" required autocomplete="name" aria-describedby="dica-nome erro-nome" /><small id="dica-nome" class="dica">De 3 a 80 caracteres.</small><span id="erro-nome" class="mensagem-erro" aria-live="polite"></span></div>
           <div class="campo-grupo"><label for="email">E-mail <span>*</span></label><input type="email" id="email" name="email" required autocomplete="email" aria-describedby="dica-email erro-email" /><small id="dica-email" class="dica">Exemplo: usuario@dominio.com</small><span id="erro-email" class="mensagem-erro" aria-live="polite"></span></div>
           <div class="campo-grupo"><label for="motivo">Motivo do contato <span>*</span></label><select id="motivo" name="motivo" required aria-describedby="erro-motivo"><option value="">Selecione uma opção...</option><option value="profissional">Oportunidade profissional</option><option value="freelance">Projeto freelance</option><option value="outro">Outro</option></select><span id="erro-motivo" class="mensagem-erro" aria-live="polite"></span></div>
@@ -137,7 +144,6 @@
       <aside class="painel complementar">
         <h3>Informações extras</h3>
         <p>Objetivo atual: Desenvolver projetos full-stack com Java e Front-End acessível.</p>
-        <p class="dica">* Demonstração assíncrona: nenhum e-mail real é enviado por esta interface de teste.</p>
         <ul class="links-externos">
           <li><a href="https://github.com/Ruan-Ariel" class="btn" target="_blank" rel="noopener">GitHub ↗</a></li>
           <li><a href="https://www.instagram.com/" class="btn" target="_blank" rel="noopener">Instagram ↗</a></li>

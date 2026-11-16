@@ -54,12 +54,6 @@ td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}td:last-child
 .filtro-container{display:flex;flex-direction:column;align-items:center;gap:12px;margin:-16px 0 40px}
 .botoes-filtro{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .btn-filtro{min-height:44px;padding:8px 22px;border:0;border-radius:999px;background:var(--chip);color:var(--ink);font:500 .85rem var(--f);cursor:pointer}.btn-filtro.ativo{background:var(--btn);color:var(--btnt)}
-.cards{display:grid;gap:24px;grid-template-columns:1fr;text-align:left}
-.card{display:flex;flex-direction:column;background:var(--card);border-radius:24px;overflow:hidden;box-shadow:var(--sh);transition:transform .25s}.card:hover{transform:translateY(-4px)}
-.thumb img{width:100%;aspect-ratio:2/1;object-fit:cover}.card-corpo{display:flex;flex-direction:column;gap:10px;padding:24px;flex:1}
-.card h3{font-size:1.4rem;font-weight:600}.card p{margin:0;font-size:.9rem}.card strong{color:var(--ink);font-weight:600}
-.techs{display:flex;flex-wrap:wrap;gap:6px}.techs span{padding:3px 12px;border-radius:999px;background:var(--chip);font-size:.75rem;font-weight:600;color:var(--ink)}
-.link{margin-top:auto;padding-top:6px;min-height:44px;display:inline-flex;align-items:center;font-weight:600;color:var(--ink);text-underline-offset:5px}
 .mensagem-vazio{padding:32px;border-radius:24px;background:var(--card);color:var(--mut)}
 .contato-grid{display:grid;gap:24px;grid-template-columns:1fr;text-align:left}
 .painel{background:var(--card);border-radius:28px;box-shadow:var(--sh);padding:32px}.painel>h3{font-size:1.5rem;font-weight:600;margin-bottom:24px}
@@ -77,5 +71,29 @@ textarea{min-height:130px;resize:vertical}input:focus,select:focus,textarea:focu
 .js .rev{opacity:0;transform:translateY(14px);transition:opacity .6s,transform .6s}.js .rev.vis{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}.js .rev{opacity:1;transform:none}html{scroll-behavior:auto}}
 @media (max-width:640px){.logo{font-size:0}.menu{padding:8px 12px}.stats{position:static;margin-top:16px}.hero{padding-top:110px}}
-@media (min-width:768px){.sobre-grid{grid-template-columns:minmax(0,.8fr) 1.2fr}.duas{grid-template-columns:1fr 1fr}.cards{grid-template-columns:repeat(2,1fr)}.contato-grid{grid-template-columns:1.6fr 1fr}.detalhes{grid-template-columns:1fr 1fr}}
-@media (min-width:1024px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:768px){.sobre-grid{grid-template-columns:minmax(0,.8fr) 1.2fr}.duas{grid-template-columns:1fr 1fr}.contato-grid{grid-template-columns:1.6fr 1fr}.detalhes{grid-template-columns:1fr 1fr}}
+
+
+/* Cursor da animação de digitação */
+.cursor .digita::after{content:"";display:inline-block;width:2px;height:1.1em;margin-left:3px;vertical-align:text-bottom;background:var(--ink);animation:pisca .8s steps(1) infinite}
+@keyframes pisca{50%{opacity:0}}
+
+/* Projetos: texto à esquerda, janela de navegador à direita */
+.projetos{display:flex;flex-direction:column;gap:32px;text-align:left}
+.projeto{display:grid;gap:32px;grid-template-columns:1fr;align-items:center;background:var(--card);border-radius:28px;box-shadow:var(--sh);padding:28px}
+.projeto[hidden]{display:none!important}
+.categoria{display:inline-block;margin:0 0 14px;padding:6px 16px;border:1px solid var(--line);border-radius:999px;font-size:.7rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.projeto h3{font-size:clamp(2rem,5vw,3rem);font-weight:700;line-height:1.1;margin-bottom:16px}
+.projeto-texto>p:not(.categoria):not(.destaque){margin:0 0 10px}.projeto strong{color:var(--ink);font-weight:600}
+.destaque{margin:18px 0;padding:16px 20px;border:1px solid var(--ink);border-radius:18px;color:var(--ink);font-size:.92rem}
+.stack{list-style:none;margin:0 0 24px;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.stack li{padding:7px 16px;border-radius:12px;background:var(--chip);color:var(--ink);font-size:.82rem;font-weight:600}
+.projeto .btn{border-radius:999px;text-transform:uppercase;letter-spacing:.06em;font-size:.82rem}
+.janela{margin:0;border-radius:20px;overflow:hidden;background:#12162b;box-shadow:var(--sh)}
+.janela-barra{display:flex;align-items:center;gap:7px;padding:14px 18px}.janela-barra span{width:9px;height:9px;border-radius:50%;background:#5b6078}
+.janela-barra em{margin-left:10px;font:normal .78rem ui-monospace,SFMono-Regular,Menlo,monospace;color:#c9cce0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.janela img{width:100%;height:auto;display:block}
+@media (min-width:900px){.projeto{grid-template-columns:1fr 1.05fr;gap:48px;padding:40px}}
+
+/* Campo-armadilha anti-robô */
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
