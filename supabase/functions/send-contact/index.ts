@@ -1,4 +1,3 @@
-// Edge Function: recebe o formulário do portfólio, salva no Supabase e avisa por e-mail via Resend.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
@@ -6,9 +5,8 @@ const TO_EMAIL = Deno.env.get('CONTACT_TO_EMAIL') ?? ''
 const FROM_EMAIL = Deno.env.get('CONTACT_FROM_EMAIL') ?? 'Portfólio <onboarding@resend.dev>'
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') ?? '')
   .split(',').map((s) => s.trim()).filter(Boolean)
-const MAX_PER_HOUR = 5 // limite de mensagens por IP a cada hora
+const MAX_PER_HOUR = 5
 
-// SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY já existem automaticamente dentro das Edge Functions
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -26,7 +24,7 @@ type Payload = {
   motivo?: string
   assunto?: string
   mensagem?: string
-  website?: string // campo-armadilha (honeypot): humanos não preenchem
+  website?: string
 }
 
 const escapeHtml = (s: string) =>
@@ -50,7 +48,6 @@ function reply(body: unknown, status: number, origin: string | null) {
   })
 }
 
-// Mesmas regras do formulário no navegador (a validação de verdade é a do servidor)
 function validate(p: Payload) {
   const errors: Record<string, string> = {}
   const nome = (p.nome ?? '').trim()
@@ -83,7 +80,6 @@ Deno.serve(async (req: Request) => {
     return reply({ error: 'Corpo da requisição inválido.' }, 400, origin)
   }
 
-  // Robô preencheu o campo escondido: finge sucesso e não grava nada
   if (payload.website) return reply({ ok: true }, 200, origin)
 
   const { errors, nome, email, assunto, mensagem } = validate(payload)
@@ -91,7 +87,6 @@ Deno.serve(async (req: Request) => {
 
   const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null
 
-  // Limite de envios por IP
   if (ip) {
     const since = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { count } = await supabase
@@ -104,7 +99,6 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  // 1) Salva no banco
   const { data: saved, error: dbError } = await supabase
     .from('contact_messages')
     .insert({
@@ -123,7 +117,6 @@ Deno.serve(async (req: Request) => {
     return reply({ error: 'Não foi possível salvar sua mensagem. Tente novamente.' }, 500, origin)
   }
 
-  // 2) Avisa por e-mail (Resend). Se falhar, a mensagem continua salva no banco.
   const motivoTxt = REASONS[payload.motivo!]
   const assuntoEmail = `Novo contato: ${payload.motivo === 'outro' ? assunto : motivoTxt} — ${nome}`
   const html = `
@@ -144,7 +137,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [TO_EMAIL],
-        reply_to: email, // ao clicar em "Responder", vai direto para quem escreveu
+        reply_to: email,
         subject: assuntoEmail,
         html,
       }),

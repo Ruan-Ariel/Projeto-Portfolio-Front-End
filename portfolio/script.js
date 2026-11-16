@@ -1,121 +1,358 @@
-(function(){
-  /* Endereço da Edge Function (troque SEU_PROJECT_REF pelo ID do seu projeto no Supabase) */
-  var ENDPOINT='https://qrwfxthwkrshhambttav.supabase.co/functions/v1/send-contact';
-  var $=function(s,c){return (c||document).querySelector(s)};
-  var $$=function(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))};
-  var root=document.documentElement;
+const MENSAGEM_MINIMA = 30;
+const MENSAGEM_MAXIMA = 1000;
+const ENDPOINT = 'https://qrwfxthwkrshhambttav.supabase.co/functions/v1/send-contact';
 
-  /* Loader */
-  window.addEventListener('load',function(){setTimeout(function(){$('#loader').classList.add('fim')},1200)});
+const $ = (seletor, contexto = document) => contexto.querySelector(seletor);
+const $$ = (seletor, contexto = document) => [...contexto.querySelectorAll(seletor)];
+const esperar = (milissegundos) => new Promise((resolver) => setTimeout(resolver, milissegundos));
 
-  /* Animação de digitação (título e descrição do início) */
-  var alvos=$$('.hero h2, .hero-texto > p:not(.conectar)');
-  var reduz=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function digita(el,texto,vel,fim){
-    var i=0,sp=el.querySelector('.digita');
-    (function passo(){
-      sp.textContent=texto.slice(0,++i);
-      if(i<texto.length){setTimeout(passo,vel+Math.random()*40)}else if(fim){fim()}
-    })();
-  }
-  if(alvos.length&&!reduz){
-    var dados=alvos.map(function(el){
-      var t=el.textContent.trim();
-      el.style.minHeight=el.offsetHeight+'px';           /* evita o layout "pular" */
-      el.setAttribute('aria-label',t);                    /* leitor de tela lê o texto completo */
-      el.innerHTML='<span class="digita" aria-hidden="true"></span>';
-      return {el:el,t:t};
-    });
-    setTimeout(function(){
-      (function proximo(n){
-        if(n>=dados.length)return;
-        dados.forEach(function(d,k){d.el.classList.toggle('cursor',k===n)});
-        digita(dados[n].el,dados[n].t,n===0?55:22,function(){setTimeout(function(){proximo(n+1)},250)});
-      })(0);
-    },1500);                                              /* começa depois do loader */
-  }
+const raiz = document.documentElement;
 
-  /* Tema claro/escuro */
-  try{var t=localStorage.getItem('tema');if(t)root.setAttribute('data-theme',t)}catch(e){}
-  $('#tema').addEventListener('click',function(){
-    var n=root.getAttribute('data-theme')==='dark'?'light':'dark';
-    root.setAttribute('data-theme',n);try{localStorage.setItem('tema',n)}catch(e){}
+function iniciarTelaDeCarregamento() {
+  window.addEventListener('load', async () => {
+    await esperar(1200);
+    $('#loader').classList.add('fim');
   });
+}
 
-  /* Entrada das seções + item ativo do menu */
-  root.classList.add('js');
-  if('IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)}})},{threshold:.08});
-    $$('.rev').forEach(function(el){io.observe(el)});
-    var spy=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
-      $$('.links a').forEach(function(a){a.classList.toggle('ativo',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'-45% 0px -50% 0px'});
-    $$('main section[id]').forEach(function(s){spy.observe(s)});
-  }else{$$('.rev').forEach(function(el){el.classList.add('vis')})}
+function iniciarTema() {
+  const botaoTema = $('#tema');
 
-  /* Filtro de projetos */
-  var botoes=$$('.btn-filtro'),cards=$$('.projeto'),contador=$('#contador-projetos'),vazio=$('#mensagem-vazio');
-  botoes.forEach(function(b){b.addEventListener('click',function(){
-    var t=b.dataset.tech,n=0;
-    botoes.forEach(function(x){var on=x===b;x.classList.toggle('ativo',on);x.setAttribute('aria-pressed',on)});
-    cards.forEach(function(c){var ok=t==='todos'||c.dataset.tech.split(' ').indexOf(t)>-1;c.hidden=!ok;if(ok)n++});
-    contador.textContent='Exibindo '+n+(n===1?' projeto.':' projetos.');
-    vazio.classList.toggle('oculto',n>0);
-  })});
+  try {
+    const temaSalvo = localStorage.getItem('tema');
+    if (temaSalvo) raiz.setAttribute('data-theme', temaSalvo);
+  } catch (erro) {}
 
-  /* Formulário */
-  var f=$('#form-contato'),motivo=$('#motivo'),grupoAssunto=$('#grupo-assunto'),assunto=$('#assunto'),
-      msg=$('#mensagem'),cont=$('#contador-mensagem'),resumo=$('#resumo-erros'),lista=$('#lista-erros'),
-      status=$('#status-formulario'),btn=$('#btn-enviar');
-  motivo.addEventListener('change',function(){
-    var o=motivo.value==='outro';grupoAssunto.classList.toggle('oculto',!o);assunto.required=o;
-    if(!o){assunto.value='';limpa('assunto')}
+  botaoTema.addEventListener('click', () => {
+    const novoTema = raiz.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    raiz.setAttribute('data-theme', novoTema);
+
+    try {
+      localStorage.setItem('tema', novoTema);
+    } catch (erro) {}
   });
-  msg.maxLength=1000;
-  msg.addEventListener('input',function(){cont.textContent=msg.value.length+' / 1000 caracteres (mínimo 30)'});
-  function limpa(id){$('#'+id).classList.remove('invalido');$('#'+id).removeAttribute('aria-invalid');$('#erro-'+id).textContent=''}
-  function erro(id,t,out){var el=$('#'+id);el.classList.add('invalido');el.setAttribute('aria-invalid','true');$('#erro-'+id).textContent=t;out.push({id:id,t:t})}
-  function valida(){
-    var out=[],v;['nome','email','motivo','assunto','mensagem'].forEach(limpa);
-    v=$('#nome').value.trim();
-    if(!v)erro('nome','Informe seu nome completo.',out);
-    else if(v.length<3||v.length>80)erro('nome','O nome deve ter de 3 a 80 caracteres.',out);
-    v=$('#email').value.trim();
-    if(!v)erro('email','Informe seu e-mail.',out);
-    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))erro('email','Informe um e-mail válido, como usuario@dominio.com.',out);
-    if(!motivo.value)erro('motivo','Selecione o motivo do contato.',out);
-    if(motivo.value==='outro'){v=assunto.value.trim();if(v.length<5||v.length>100)erro('assunto','O assunto deve ter de 5 a 100 caracteres.',out)}
-    v=msg.value.trim();
-    if(v.length<30)erro('mensagem','A mensagem deve ter no mínimo 30 caracteres.',out);
-    else if(v.length>1000)erro('mensagem','A mensagem deve ter no máximo 1000 caracteres.',out);
-    return out;
+}
+
+function iniciarAnimacaoDeEntrada() {
+  raiz.classList.add('js');
+
+  const secoes = $$('.rev');
+
+  if (!('IntersectionObserver' in window)) {
+    secoes.forEach((secao) => secao.classList.add('vis'));
+    return;
   }
-  f.addEventListener('submit',function(e){
-    e.preventDefault();status.textContent='';status.className='status-formulario';
-    var out=valida();
-    if(out.length){
-      lista.innerHTML='';
-      out.forEach(function(o){var li=document.createElement('li'),a=document.createElement('a');a.href='#'+o.id;a.textContent=o.t;
-        a.addEventListener('click',function(ev){ev.preventDefault();$('#'+o.id).focus()});li.appendChild(a);lista.appendChild(li)});
-      resumo.classList.remove('oculto');resumo.focus();return;
+
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      entradas.forEach((entrada) => {
+        if (!entrada.isIntersecting) return;
+        entrada.target.classList.add('vis');
+        observador.unobserve(entrada.target);
+      });
+    },
+    { threshold: 0.08 }
+  );
+
+  secoes.forEach((secao) => observador.observe(secao));
+}
+
+function iniciarMenuAtivo() {
+  if (!('IntersectionObserver' in window)) return;
+
+  const linksDoMenu = $$('.links a');
+
+  const observador = new IntersectionObserver(
+    (entradas) => {
+      entradas.forEach((entrada) => {
+        if (!entrada.isIntersecting) return;
+
+        linksDoMenu.forEach((link) => {
+          const apontaParaSecao = link.getAttribute('href') === `#${entrada.target.id}`;
+          link.classList.toggle('ativo', apontaParaSecao);
+        });
+      });
+    },
+    { rootMargin: '-45% 0px -50% 0px' }
+  );
+
+  $$('main section[id]').forEach((secao) => observador.observe(secao));
+}
+
+function digitar(elemento, texto, velocidade) {
+  const destino = elemento.querySelector('.digita');
+
+  return new Promise((resolver) => {
+    let letrasExibidas = 0;
+
+    function mostrarProximaLetra() {
+      letrasExibidas += 1;
+      destino.textContent = texto.slice(0, letrasExibidas);
+
+      if (letrasExibidas < texto.length) {
+        setTimeout(mostrarProximaLetra, velocidade + Math.random() * 40);
+      } else {
+        resolver();
+      }
     }
-    resumo.classList.add('oculto');btn.disabled=true;btn.textContent='Enviando...';
-    var dados={nome:$('#nome').value.trim(),email:$('#email').value.trim(),motivo:motivo.value,
-      assunto:assunto.value.trim(),mensagem:msg.value.trim(),website:$('#website').value};
-    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)})
-      .then(function(r){return r.json().catch(function(){return {}}).then(function(j){return {status:r.status,body:j}})})
-      .then(function(r){
-        if(r.status===200&&r.body.ok){
-          status.textContent='Mensagem enviada com sucesso!';status.className='status-formulario ok';
-          f.reset();grupoAssunto.classList.add('oculto');cont.textContent='0 / 1000 caracteres (mínimo 30)';
-        }else if(r.status===422&&r.body.errors){
-          var out=[];Object.keys(r.body.errors).forEach(function(id){if($('#erro-'+id))erro(id,r.body.errors[id],out)});
-          lista.innerHTML='';out.forEach(function(o){var li=document.createElement('li');li.textContent=o.t;lista.appendChild(li)});
-          resumo.classList.remove('oculto');resumo.focus();
-        }else{
-          status.textContent=r.body.error||'Não foi possível enviar agora. Tente novamente.';status.className='status-formulario falha';
-        }
-      })
-      .catch(function(){status.textContent='Falha de conexão. Tente novamente.';status.className='status-formulario falha'})
-      .then(function(){btn.disabled=false;btn.textContent='Enviar mensagem'});
+
+    mostrarProximaLetra();
   });
-})();
+}
+
+async function iniciarDigitacao() {
+  const reduzMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const elementos = $$('.hero h2, .hero-texto > p:not(.conectar)');
+
+  if (reduzMovimento || elementos.length === 0) return;
+
+  const itens = elementos.map((elemento) => {
+    const texto = elemento.textContent.trim();
+
+    elemento.style.minHeight = `${elemento.offsetHeight}px`;
+    elemento.setAttribute('aria-label', texto);
+    elemento.innerHTML = '<span class="digita" aria-hidden="true"></span>';
+
+    return { elemento, texto };
+  });
+
+  await esperar(1500);
+
+  for (const [posicao, item] of itens.entries()) {
+    itens.forEach((outro, indice) => {
+      outro.elemento.classList.toggle('cursor', indice === posicao);
+    });
+
+    const velocidade = posicao === 0 ? 55 : 22;
+    await digitar(item.elemento, item.texto, velocidade);
+    await esperar(250);
+  }
+}
+
+function iniciarFiltroDeProjetos() {
+  const botoes = $$('.btn-filtro');
+  const projetos = $$('.projeto');
+  const contador = $('#contador-projetos');
+  const mensagemVazio = $('#mensagem-vazio');
+
+  botoes.forEach((botao) => {
+    botao.addEventListener('click', () => {
+      const tecnologia = botao.dataset.tech;
+      let projetosVisiveis = 0;
+
+      botoes.forEach((outroBotao) => {
+        const estaAtivo = outroBotao === botao;
+        outroBotao.classList.toggle('ativo', estaAtivo);
+        outroBotao.setAttribute('aria-pressed', estaAtivo);
+      });
+
+      projetos.forEach((projeto) => {
+        const tecnologias = projeto.dataset.tech.split(' ');
+        const deveMostrar = tecnologia === 'todos' || tecnologias.includes(tecnologia);
+
+        projeto.hidden = !deveMostrar;
+        if (deveMostrar) projetosVisiveis += 1;
+      });
+
+      const palavra = projetosVisiveis === 1 ? 'projeto' : 'projetos';
+      contador.textContent = `Exibindo ${projetosVisiveis} ${palavra}.`;
+      mensagemVazio.classList.toggle('oculto', projetosVisiveis > 0);
+    });
+  });
+}
+
+function iniciarFormulario() {
+  const formulario = $('#form-contato');
+  const campoMotivo = $('#motivo');
+  const grupoAssunto = $('#grupo-assunto');
+  const campoAssunto = $('#assunto');
+  const campoMensagem = $('#mensagem');
+  const contadorMensagem = $('#contador-mensagem');
+  const resumoErros = $('#resumo-erros');
+  const listaErros = $('#lista-erros');
+  const statusFormulario = $('#status-formulario');
+  const botaoEnviar = $('#btn-enviar');
+
+  const camposValidados = ['nome', 'email', 'motivo', 'assunto', 'mensagem'];
+  const textoContador = (quantidade) =>
+    `${quantidade} / ${MENSAGEM_MAXIMA} caracteres (mínimo ${MENSAGEM_MINIMA})`;
+
+  campoMensagem.maxLength = MENSAGEM_MAXIMA;
+
+  function limparErro(id) {
+    const campo = $(`#${id}`);
+    campo.classList.remove('invalido');
+    campo.removeAttribute('aria-invalid');
+    $(`#erro-${id}`).textContent = '';
+  }
+
+  function mostrarErro(id, texto, erros) {
+    const campo = $(`#${id}`);
+    campo.classList.add('invalido');
+    campo.setAttribute('aria-invalid', 'true');
+    $(`#erro-${id}`).textContent = texto;
+    erros.push({ id, texto });
+  }
+
+  function exibirResumoDeErros(erros) {
+    listaErros.innerHTML = '';
+
+    erros.forEach(({ id, texto }) => {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+
+      link.href = `#${id}`;
+      link.textContent = texto;
+      link.addEventListener('click', (evento) => {
+        evento.preventDefault();
+        $(`#${id}`).focus();
+      });
+
+      item.appendChild(link);
+      listaErros.appendChild(item);
+    });
+
+    resumoErros.classList.remove('oculto');
+    resumoErros.focus();
+  }
+
+  function validar() {
+    const erros = [];
+    camposValidados.forEach(limparErro);
+
+    const nome = $('#nome').value.trim();
+    if (!nome) {
+      mostrarErro('nome', 'Informe seu nome completo.', erros);
+    } else if (nome.length < 3 || nome.length > 80) {
+      mostrarErro('nome', 'O nome deve ter de 3 a 80 caracteres.', erros);
+    }
+
+    const email = $('#email').value.trim();
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!email) {
+      mostrarErro('email', 'Informe seu e-mail.', erros);
+    } else if (!emailValido) {
+      mostrarErro('email', 'Informe um e-mail válido, como usuario@dominio.com.', erros);
+    }
+
+    if (!campoMotivo.value) {
+      mostrarErro('motivo', 'Selecione o motivo do contato.', erros);
+    }
+
+    if (campoMotivo.value === 'outro') {
+      const assunto = campoAssunto.value.trim();
+      if (assunto.length < 5 || assunto.length > 100) {
+        mostrarErro('assunto', 'O assunto deve ter de 5 a 100 caracteres.', erros);
+      }
+    }
+
+    const mensagem = campoMensagem.value.trim();
+    if (mensagem.length < MENSAGEM_MINIMA) {
+      mostrarErro('mensagem', `A mensagem deve ter no mínimo ${MENSAGEM_MINIMA} caracteres.`, erros);
+    } else if (mensagem.length > MENSAGEM_MAXIMA) {
+      mostrarErro('mensagem', `A mensagem deve ter no máximo ${MENSAGEM_MAXIMA} caracteres.`, erros);
+    }
+
+    return erros;
+  }
+
+  function lerDadosDoFormulario() {
+    return {
+      nome: $('#nome').value.trim(),
+      email: $('#email').value.trim(),
+      motivo: campoMotivo.value,
+      assunto: campoAssunto.value.trim(),
+      mensagem: campoMensagem.value.trim(),
+      website: $('#website').value,
+    };
+  }
+
+  function mostrarStatus(texto, tipo) {
+    statusFormulario.textContent = texto;
+    statusFormulario.className = `status-formulario ${tipo}`;
+  }
+
+  function limparFormulario() {
+    formulario.reset();
+    grupoAssunto.classList.add('oculto');
+    contadorMensagem.textContent = textoContador(0);
+  }
+
+  function mostrarErrosDoServidor(errosDoServidor) {
+    const erros = [];
+
+    Object.entries(errosDoServidor).forEach(([id, texto]) => {
+      if ($(`#erro-${id}`)) mostrarErro(id, texto, erros);
+    });
+
+    exibirResumoDeErros(erros);
+  }
+
+  async function enviarMensagem() {
+    botaoEnviar.disabled = true;
+    botaoEnviar.textContent = 'Enviando...';
+
+    try {
+      const resposta = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(lerDadosDoFormulario()),
+      });
+      const corpo = await resposta.json().catch(() => ({}));
+
+      if (resposta.ok && corpo.ok) {
+        mostrarStatus('Mensagem enviada com sucesso!', 'ok');
+        limparFormulario();
+      } else if (resposta.status === 422 && corpo.errors) {
+        mostrarErrosDoServidor(corpo.errors);
+      } else {
+        mostrarStatus(corpo.error || 'Não foi possível enviar agora. Tente novamente.', 'falha');
+      }
+    } catch (erro) {
+      mostrarStatus('Falha de conexão. Tente novamente.', 'falha');
+    } finally {
+      botaoEnviar.disabled = false;
+      botaoEnviar.textContent = 'Enviar mensagem';
+    }
+  }
+
+  campoMotivo.addEventListener('change', () => {
+    const escolheuOutro = campoMotivo.value === 'outro';
+
+    grupoAssunto.classList.toggle('oculto', !escolheuOutro);
+    campoAssunto.required = escolheuOutro;
+
+    if (!escolheuOutro) {
+      campoAssunto.value = '';
+      limparErro('assunto');
+    }
+  });
+
+  campoMensagem.addEventListener('input', () => {
+    contadorMensagem.textContent = textoContador(campoMensagem.value.length);
+  });
+
+  formulario.addEventListener('submit', (evento) => {
+    evento.preventDefault();
+    statusFormulario.textContent = '';
+    statusFormulario.className = 'status-formulario';
+
+    const erros = validar();
+
+    if (erros.length > 0) {
+      exibirResumoDeErros(erros);
+      return;
+    }
+
+    resumoErros.classList.add('oculto');
+    enviarMensagem();
+  });
+}
+
+iniciarTelaDeCarregamento();
+iniciarTema();
+iniciarAnimacaoDeEntrada();
+iniciarMenuAtivo();
+iniciarDigitacao();
+iniciarFiltroDeProjetos();
+iniciarFormulario();
